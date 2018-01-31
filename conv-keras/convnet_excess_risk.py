@@ -26,12 +26,22 @@ i = 0
 for j in y:
     y_train[i, j[0]] = 1
     i = i + 1
+test = np.zeros((y_test.size, Num_Cat))
+i = 0 
+for j in y_test:
+    test[i, j[0]] = 1
+    i = i + 1
+y_test = test
 
 #padding zeros to first layer
 shape_x = x.shape
+shape_test = x_test.shape
 tem = np.zeros((shape_x[0],shape_x[1]+4, shape_x[2]+4, shape_x[3]))
-tem[:, 2:2+shape_x[1],2:2+shape_x[2], :] = x
+tem_test = np.zeros((shape_test[0],shape_test[1]+4, shape_test[2]+4, shape_test[3]))
+tem[:, 2:2+shape_test[1],2:2+shape_test[2], :] = x
+tem_test[:, 2:2+shape_test[1],2:2+shape_test[2], :] = x_test
 x_train = tem
+x_test = tem_test
 #pdb.set_trace()
 
 #Building ConvNetJS
@@ -71,19 +81,28 @@ sgd = optimizers.SGD(lr = learnrate)
 
 #===========Train Model===================
 print('Training Model')
-model.compile(loss='categorical_crossentropy',optimizer=sgd) 
+model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy']) 
 
 #Adding check point to export weight from different epoch
 from keras.callbacks import ModelCheckpoint
 filepath = "weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
-checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 20)
+checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 50)
 
 # #Fit model
-history_callback = model.fit(x_train, y_train, epochs = 400, batch_size =16, callbacks = [checkpoint])
-loss_history  = history_callback.history["loss"]
-numpy_loss_history = np.array(loss_history)
-losspath = "loss_history_conn_net"+str(learnrate)
-np.savetxt(losspath, numpy_loss_history, delimiter = ",")
+history_callback = model.fit(x_train, y_train, epochs = 400, batch_size =16, validation_data = (x_test, y_test), callbacks = [checkpoint])
+#loss_history  = history_callback.history["loss"]
+pdb.set_trace()
+acc_history = history_callback.history["acc"]
+val_acc_history = history_callback.history["val_acc"]
+#numpy_loss_history = np.array(loss_history)
+numpy_acc_history = np.array(acc_history)
+numpy_val_acc_history = np.array(val_acc_history)
+#losspath = "loss_history_conn_net"+str(learnrate)
+accpath = "acc_history_conn_net" + str(learnrate) + ".txt"
+valpath = "val_acc_history_conn_net" + str(learnrate) + ".txt"
+#np.savetxt(losspath, numpy_loss_history, delimiter = ",")
+np.savetxt(accpath,numpy_acc_history, delimiter = ",")
+np.savetxt(valpath, numpy_val_acc_history, delimiter = ",")
 
 
 
