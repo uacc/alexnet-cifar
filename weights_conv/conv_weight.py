@@ -1,7 +1,8 @@
 import pdb
+import math
 import numpy as np
 import h5py
-def LipschitzConstant(filename, padding):
+def LipschitzConstant(filename, PaddingMethod):
     
     #==========Load input and network structure information==========
     inputsize = [36,36,3]
@@ -41,7 +42,7 @@ def LipschitzConstant(filename, padding):
                 input_size = (layer_input[0]+4)*(layer_input[0]+4)*layer_input[2]
                 output_size = np.prod(layer_output)
 
-                if padding == True:
+                if PaddingMethod == True:
                     #Asssigning values to A
                     A = np.zeros((output_size, input_size))
                     for entry in range(0, output_size):
@@ -69,17 +70,18 @@ def LipschitzConstant(filename, padding):
                     d_int = layer_input[2]
                     k = (layer_size[0]-1)/2
                     
-                    A = np.array(d_out, (2*k + 1)*d_int)
+                    A = np.zeros((d_out, (2*k + 1)*(2*k + 1)*d_int))
                     for depth in range(0, d_out):
                         weight = kernel[:,:,:,depth]
-                        A[depth, :] = np.ravel(weight)
+                        #pdb.set_trace()
+                        A[depth, :] = math.sqrt((2*k+1)) *np.ravel(weight)
 
 
 
                 #==========computing spectral norm from A========== 
                 from numpy import linalg as LA
                 lip_const = lip_const * LA.norm(A, 2)
-            else:
+            elif layer[0:6]=='dense':
                 pdb.set_trace()
                 full_key = weights.get(layer).get(layer).keys()
                 full_weight = weights.get(layer).get(layer).get(full_key[1])
@@ -88,6 +90,7 @@ def LipschitzConstant(filename, padding):
                 #
 
                 lip_const = lip_const*LA.norm(full_weight, 2)
-                
+            else:
+                continue
 
     return lip_const
