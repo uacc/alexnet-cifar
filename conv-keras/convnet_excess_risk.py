@@ -81,30 +81,47 @@ sgd = optimizers.SGD(lr = learnrate)
 
 #===========Train Model===================
 print('Training Model')
-model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy']) 
+from keras import backend as K
+import tensorflow as tf
+def margin(y_true, y_pred):
+    #maxtrue = y_true * y_pred
+    #pdb.set_trace()
+    tem = tf.multiply(y_true, y_pred)
+    maxtrue = tf.reduce_max(tem)
+    #maxmarg = max(y_pred)
+    maxmarg = tf.reduce_max(y_pred)
+    marg = tf.subtract(maxtrue, maxmarg)
+    return marg
+
+model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy', margin]) 
 
 #Adding check point to export weight from different epoch
 from keras.callbacks import ModelCheckpoint
-filepath = "weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
-checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 50)
+#filepath = "weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
+#checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 50)
 
 # #Fit model
-history_callback = model.fit(x_train, y_train, epochs = 400, batch_size =16, validation_data = (x_test, y_test), callbacks = [checkpoint])
+history_callback = model.fit(x_train, y_train, epochs = 300, batch_size =16, validation_data = (x_test, y_test) )
 #loss_history  = history_callback.history["loss"]
-pdb.set_trace()
-acc_history = history_callback.history["acc"]
-val_acc_history = history_callback.history["val_acc"]
-#numpy_loss_history = np.array(loss_history)
-numpy_acc_history = np.array(acc_history)
-numpy_val_acc_history = np.array(val_acc_history)
-#losspath = "loss_history_conn_net"+str(learnrate)
-accpath = "acc_history_conn_net" + str(learnrate) + ".txt"
-valpath = "val_acc_history_conn_net" + str(learnrate) + ".txt"
-#np.savetxt(losspath, numpy_loss_history, delimiter = ",")
-np.savetxt(accpath,numpy_acc_history, delimiter = ",")
-np.savetxt(valpath, numpy_val_acc_history, delimiter = ",")
-
-
+#pdb.set_trace()
+#acc_history = history_callback.history["acc"]
+#val_acc_history = history_callback.history["val_acc"]
+##numpy_loss_history = np.array(loss_history)
+#numpy_acc_history = np.array(acc_history)
+#numpy_val_acc_history = np.array(val_acc_history)
+##losspath = "loss_history_conn_net"+str(learnrate)
+#accpath = "acc_history_conn_net" + str(learnrate) + ".txt"
+#valpath = "val_acc_history_conn_net" + str(learnrate) + ".txt"
+##np.savetxt(losspath, numpy_loss_history, delimiter = ",")
+#np.savetxt(accpath,numpy_acc_history, delimiter = ",")
+#np.savetxt(valpath, numpy_val_acc_history, delimiter = ",")
+#
+margin_history = history_callback.history["margin"]
+marginval_history = history_callback.history["val_margin"]
+mh = np.array(margin_history)
+mhv = np.array(marginval_history)
+np.savetxt('mh.txt', mh, delimiter = ",")
+np.savetxt('mhv.txt', mhv, delimiter = ",")
 
 
 
