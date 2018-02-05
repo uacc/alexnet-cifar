@@ -1,6 +1,7 @@
 import csv
 import pdb
 import numpy as np
+import os
 
 # file name
 acc = 'acc_history_conn_net0.001.txt'
@@ -18,4 +19,10 @@ excess_risk = np.zeros(len(acc))
 for i in range(0, len(acc)):
     excess_risk[i] = acc[i][0] - val[i][0]
 
+np.savetxt("excess_risk.txt", excess_risk, delimiter = ",")
 print excess_risk
+
+import matplotlib.pyplot as plt
+plt.plot(excess_risk.tolist())
+plt.ylabel('excess_risk')
+plt.show()
