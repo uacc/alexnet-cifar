@@ -79,35 +79,40 @@ model.add(Dense(10,activation='softmax'))
 sgd = optimizers.SGD(lr = learnrate)
 #sgd = optimizers.Adamax(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=0.01, decay=0.0)
 
+
+# Adding  new model to get the output layer
+from keras.models import Model
+layer_name = 'dense_1'
+intermediate_layer_model = Model(inputs = model.input, outputs = model.get_layer(layer_name).output)
+
 #===========Train Model===================
 print('Training Model')
 from keras import backend as K
 import tensorflow as tf
-def margin(y_true, y_pred):
-    #maxtrue = y_true * y_pred
-    #pdb.set_trace()
-    with tf.Session():
-        # Transfer tensor to numpy
-        true = y_true.eval()
-        pred = y_pred.eval()
-        
-        y = np.argmax(true)
-        pred[y] = 0
-        j = np.argmax(pred)
 
-        marg = pred[y] - pred[j]
-    return marg
-
-model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy', margin]) 
+    
+model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy']) 
 
 #Adding check point to export weight from different epoch
+# Also save margin after each callback epoch
 from keras.callbacks import ModelCheckpoint
 filepath = "weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
 checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 5)
 
+import my_callbacks
+marginhistory = my_callbacks.Histories()
+
+# Check Model Summary
 model.summary()
-# #Fit model
-history_callback = model.fit(x_train, y_train, epochs = 200, batch_size =16, validation_data = (x_test, y_test) )
+
+#========== Fit model==========
+history_callback = model.fit(x_train, y_train, epochs = 10, batch_size =16, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
+
+# Print out margins after each epoch
+print(marginhistory.margins)
+
+intermediate_output = intermediate_layer_model.predict(x_train)
+pdb.set_trace()
 #loss_history  = history_callback.history["loss"]
 #pdb.set_trace()
 acc_history = history_callback.history["acc"]
