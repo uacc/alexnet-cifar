@@ -20,13 +20,14 @@ class Histories(keras.callbacks.Callback):
         margin = 0 
         for k in range(0,len(y)): 
             if y[k] == i[k]:
-                pdb.set_trace()
+                tem = y_pred[k][i[k]]
                 y_pred[k][i[k]] = 0
                 j = np.amax(y_pred[k])
-                margin = margin + (y_pred[k][y[k]] - j)
+                margin = margin + (tem - j)
             else:
                 margin = margin + (y_pred[k][y[k]] - y_pred[k][i[k]])
         margin_ave = margin / len(y) 
+        #pdb.set_trace()
         self.margins.append(margin_ave)
         return
 

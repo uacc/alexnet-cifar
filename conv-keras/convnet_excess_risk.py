@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pdb
 import os
-#os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 import pdb
 import math
 import keras
@@ -97,7 +97,7 @@ model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'
 # Also save margin after each callback epoch
 from keras.callbacks import ModelCheckpoint
 filepath = "weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
-checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 5)
+checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = 10)
 
 import my_callbacks
 marginhistory = my_callbacks.Histories()
@@ -106,48 +106,27 @@ marginhistory = my_callbacks.Histories()
 model.summary()
 
 #========== Fit model==========
-history_callback = model.fit(x_train, y_train, epochs = 10, batch_size =16, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
+#history_callback = model.fit(x_train, y_train, epochs = 300, batch_size =16, validation_data = (x_train, y_train), callbacks = [checkpoint, marginhistory] )
+
+history_callback = model.fit(x_train, y_train, epochs = 200, batch_size =16, validation_data = (x_train, y_train), callbacks = [marginhistory] )
 
 # Print out margins after each epoch
 print(marginhistory.margins)
+margin_history = marginhistory.margins
+margin_his = np.array(margin_history)
+np.savetxt('margin_history_train_margin.txt', margin_his, delimiter = ",")
 
 intermediate_output = intermediate_layer_model.predict(x_train)
-pdb.set_trace()
-#loss_history  = history_callback.history["loss"]
-#pdb.set_trace()
-acc_history = history_callback.history["acc"]
-val_acc_history = history_callback.history["val_acc"]
-#numpy_loss_history = np.array(loss_history)
-numpy_acc_history = np.array(acc_history)
-numpy_val_acc_history = np.array(val_acc_history)
-##losspath = "loss_history_conn_net"+str(learnrate)
-accpath = "acc_history_conn_net" + str(learnrate) + ".txt"
-valpath = "val_acc_history_conn_net" + str(learnrate) + ".txt"
-#np.savetxt(losspath, numpy_loss_history, delimiter = ",")
-np.savetxt(accpath,numpy_acc_history, delimiter = ",")
-np.savetxt(valpath, numpy_val_acc_history, delimiter = ",")
-#
-margin_history = history_callback.history["margin"]
-marginval_history = history_callback.history["val_margin"]
-mh = np.array(margin_history)
-mhv = np.array(marginval_history)
-np.savetxt('mh.txt', mh, delimiter = ",")
-np.savetxt('mhv.txt', mhv, delimiter = ",")
+final_output = np.array(intermediate_output)
+np.savetxt('final_output.txt', final_output, delimiter = ",")
+np.savetxt('y_train.txt', y_train, delimiter = ",")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#acc_history = history_callback.history["acc"]
+#val_acc_history = history_callback.history["val_acc"]
+#numpy_acc_history = np.array(acc_history)
+#numpy_val_acc_history = np.array(val_acc_history)
+#accpath = "acc_history_conn_net" + str(learnrate) + ".txt"
+#valpath = "val_acc_history_conn_net" + str(learnrate) + ".txt"
+#np.savetxt(accpath,numpy_acc_history, delimiter = ",")
+#np.savetxt(valpath, numpy_val_acc_history, delimiter = ",")
 
