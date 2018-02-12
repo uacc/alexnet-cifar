@@ -2,6 +2,7 @@ import csv
 import pdb
 import numpy as np
 import os
+from draw_lip import lip_margin 
 
 # file name
 acc = 'acc_history_conn_net0.001.txt'
@@ -19,10 +20,13 @@ excess_risk = np.zeros(len(acc))
 for i in range(0, len(acc)):
     excess_risk[i] = acc[i][0] - val[i][0]
 
-np.savetxt("excess_risk.txt", excess_risk, delimiter = ",")
+#np.savetxt("excess_risk.txt", excess_risk, delimiter = ",")
 print excess_risk
 
+lipepoch, lipschitz, lipvsmargin = lip_margin()
+pdb.set_trace()
+epoch = [int(i) for i in lipepoch]
+excess = excess_risk[epoch]
 import matplotlib.pyplot as plt
-plt.plot(excess_risk.tolist())
-plt.ylabel('excess_risk')
+plt.plot(epoch, excess, 'r--', epoch, lipschitz, 'bs', epoch, lipvsmargin, 'g^')
 plt.show()
