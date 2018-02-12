@@ -28,5 +28,10 @@ pdb.set_trace()
 epoch = [int(i) for i in lipepoch]
 excess = excess_risk[epoch]
 import matplotlib.pyplot as plt
-plt.plot(epoch, excess, 'r--', epoch, lipschitz, 'bs', epoch, lipvsmargin, 'g^')
+#plt.plot(epoch, excess, 'r--', label = 'excess_risk', epoch, lipschitz, 'bs',label = 'lipschitz',  epoch, lipvsmargin, 'g^', label = 'margin')
+plt.plot(epoch, excess, 'r--', label = "excess risk")
+plt.plot(epoch, lipschitz, 'bs', label = "lipschitz")
+plt.plot(epoch, lipvsmargin, 'g^', label = "lipschitz/margin")
+plt.legend()
 plt.show()
+
