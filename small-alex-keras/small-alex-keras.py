@@ -5,6 +5,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 import math
 import keras
 import numpy as np
+import tensorflow as tf
 
 #==========Experiment parameter==========
 LEARNRATEFINDING = False
