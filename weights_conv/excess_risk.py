@@ -22,18 +22,18 @@ excess_risk = np.zeros(len(acc))
 for i in range(0, len(acc)):
     excess_risk[i] = acc[i][0] - val[i][0]
 
-#np.savetxt("excess_risk.txt", excess_risk, delimiter = ",")
+np.savetxt("noise_excess_risk.txt", excess_risk, delimiter = ",")
 print excess_risk
 
 lipepoch, lipschitz, lipvsmargin = lip_margin()
-pdb.set_trace()
 epoch = [int(i) for i in lipepoch]
 excess = excess_risk[epoch]
-import matplotlib.pyplot as plt
-#plt.plot(epoch, excess, 'r--', label = 'excess_risk', epoch, lipschitz, 'bs',label = 'lipschitz',  epoch, lipvsmargin, 'g^', label = 'margin')
-plt.plot(epoch, excess, 'r--', label = "excess risk")
-plt.plot(epoch, lipschitz, 'bs', label = "lipschitz")
-plt.plot(epoch, lipvsmargin, 'g^', label = "lipschitz/margin")
-plt.legend()
-plt.show()
+pdb.set_trace()
+# import matplotlib.pyplot as plt
+# #plt.plot(epoch, excess, 'r--', label = 'excess_risk', epoch, lipschitz, 'bs',label = 'lipschitz',  epoch, lipvsmargin, 'g^', label = 'margin')
+# plt.plot(epoch, excess, 'r--', label = "excess risk")
+# plt.plot(epoch, lipschitz, 'bs', label = "lipschitz")
+# plt.plot(epoch, lipvsmargin, 'g^', label = "lipschitz/margin")
+# plt.legend()
+# plt.show()
 

@@ -4,38 +4,38 @@ from conv_weight import LipschitzConstant as lip
 import numpy as np
 
 def lip_margin():
-    path = os.getcwd()
-    lip_value = [] 
-    dtype = [('epochs', int), ('lipschitz', float)]
-    PaddingMethod = True
-    for file in os.listdir(path):
-        if file[-4:-1] == 'hsf':
-            tem = lip(file,PaddingMethod)
-            print file
-            epoch = file[-8:-5]
-            if epoch[0] == '-':
-                epoch = int(epoch[1:len(epoch)])
-            print epoch
-            lip_value.append((epoch, tem))
-        else:
-            continue
-    # Sort lip constant using epochs
-    lipvalue = np.array(lip_value, dtype = dtype)
-    lipvalue = np.sort(lipvalue, order = ["epochs"])
-    np.savetxt('noise-lipvalue.txt', lipvalue, delimiter = ",")
-#    #Import Lipschitz constant from 1-200 epochs
-#     lipsch = 'lipvalue.txt'
-#     with open(lipsch) as file:
-#         li = [[i for i in line.strip().split('\n')] for line in file]
-#     lipvalue = np.zeros(len(li))
-#     lipepoch = np.zeros(len(li))
-#     for i in range(0, len(li)):
-#         tem = li[i][0]
-#         tem = tem.split(',')
-#         lipvalue[i] = float(tem[1])
-#         lipepoch[i] = int(float(tem[0]))
+#     path = os.getcwd()
+#     lip_value = [] 
+#     dtype = [('epochs', int), ('lipschitz', float)]
+#     PaddingMethod = True
+#     for file in os.listdir(path):
+#         if file[-4:-1] == 'hsf':
+#             tem = lip(file,PaddingMethod)
+#             print file
+#             epoch = file[-8:-5]
+#             if epoch[0] == '-':
+#                 epoch = int(epoch[1:len(epoch)])
+#             print epoch
+#             lip_value.append((epoch, tem))
+#         else:
+#             continue
+#     # Sort lip constant using epochs
+#     lipvalue = np.array(lip_value, dtype = dtype)
+#     lipvalue = np.sort(lipvalue, order = ["epochs"])
+#     np.savetxt('noise-lipvalue.txt', lipvalue, delimiter = ",")
+    #Import Lipschitz constant from 1-200 epochs
+    lipsch = 'noise-lipvalue.txt'
+    with open(lipsch) as file:
+        li = [[i for i in line.strip().split('\n')] for line in file]
+    lipvalue = np.zeros(len(li))
+    lipepoch = np.zeros(len(li))
+    for i in range(0, len(li)):
+        tem = li[i][0]
+        tem = tem.split(',')
+        lipvalue[i] = float(tem[1])
+        lipepoch[i] = int(float(tem[0]))
     # Import excess risk to get the range
-    excess = 'excess_risk.txt'
+    excess = 'noise_excess_risk.txt'
     with open(excess) as file:
         exc = [[float(i) for i in line.strip().split('\n')] for line in file]
     excess_risk = np.zeros(len(exc))
@@ -54,7 +54,7 @@ def lip_margin():
     lip_value = lip_value + minrange
     
     # Import margin number
-    margin = 'margin_history_train_margin.txt'
+    margin = 'noise-margin_history_train_margin.txt'
     with open(margin) as file:
         mar = [[float(i) for i in line.strip().split('\n')] for line in file]
     margin = np.zeros(len(mar))
