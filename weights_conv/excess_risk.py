@@ -28,12 +28,13 @@ print excess_risk
 lipepoch, lipschitz, lipvsmargin = lip_margin()
 epoch = [int(i) for i in lipepoch]
 excess = excess_risk[epoch]
-pdb.set_trace()
-# import matplotlib.pyplot as plt
-# #plt.plot(epoch, excess, 'r--', label = 'excess_risk', epoch, lipschitz, 'bs',label = 'lipschitz',  epoch, lipvsmargin, 'g^', label = 'margin')
-# plt.plot(epoch, excess, 'r--', label = "excess risk")
-# plt.plot(epoch, lipschitz, 'bs', label = "lipschitz")
-# plt.plot(epoch, lipvsmargin, 'g^', label = "lipschitz/margin")
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
+#plt.plot(epoch, excess, 'r--', label = 'excess_risk', epoch, lipschitz, 'bs',label = 'lipschitz',  epoch, lipvsmargin, 'g^', label = 'margin')
+plt.plot(epoch, excess, 'r--', label = "excess risk")
+plt.plot(epoch, lipschitz, 'bs', label = "lipschitz")
+plt.plot(epoch, lipvsmargin, 'g^', label = "lipschitz/margin")
+plt.savefig('noise-plot.png')
 # plt.legend()
 # plt.show()
 
