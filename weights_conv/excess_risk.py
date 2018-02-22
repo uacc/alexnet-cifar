@@ -5,8 +5,10 @@ import os
 from draw_lip import lip_margin 
 
 # file name
-acc = 'acc_history_conn_net0.001.txt'
-val = 'val_acc_history_conn_net0.001.txt'
+#acc = 'acc_history_conn_net0.001.txt'
+#val = 'val_acc_history_conn_net0.001.txt'
+acc = 'noise-acc_history_conn_net0.001.txt'
+val = 'noise-val_acc_history_conn_net0.001.txt'
 
 # read acc and val_acc value
 with open(acc) as file:
