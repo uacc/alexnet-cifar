@@ -59,8 +59,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import stats, integrate
 import seaborn as sns
-
+plt.switch_backend('agg')
+print 'plot begin' 
 sns.set(color_codes = True)
+print '1'
 np.random.seed(sum(map(ord, "distributions")))
-sns.distplot(margin)
-plt.show()
+print '2'
+sns.distplot(margin, hist = False, rug = True)
+print '3'
+#sns.distplot(noise_margin, hist = False, rug = True)
+sns.plt.savefig('margin-vs-noise.png')
+print '4'
+#plt.show()
