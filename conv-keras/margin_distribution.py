@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 
@@ -59,8 +58,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import stats, integrate
 import seaborn as sns
-
 sns.set(color_codes = True)
 np.random.seed(sum(map(ord, "distributions")))
 sns.distplot(margin)
-plt.show()
+sns.distplot(noise_margin)
+#plt.show()
+plt.savefig('../margin-distri-true-vs-rand.png')
