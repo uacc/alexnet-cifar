@@ -9,9 +9,9 @@ import tensorflow as tf
 
 #==========Experiment parameter==========
 LEARNRATEFINDING = False
-SAVEMARGIN = True 
-SAVEWEIGHT = True 
-SAVEOUTPUT = True
+SAVEMARGIN = False 
+SAVEWEIGHT = False 
+SAVEOUTPUT = False
 EXCESSRISK = False 
 #MARGIN = False
 lowerbound = 0.0001
@@ -31,35 +31,9 @@ train_num = 50000
 x = x[0:train_num]
 y = y[0:train_num]
 
-import numpy as np
-#==========Training with random label=========
-y = np.random.randint(0,10,size = len(y))
-#===============Resize y as category form==============
-#Do we have to redefine y_train to fit the model?
-y_train = np.zeros((y.size, Num_Cat))
-i = 0
-for j in y:
-    y_train[i, j] = 1
-    i = i + 1
-test = np.zeros((y_test.size, Num_Cat))
-i = 0 
-for j in y_test:
-    test[i, j[0]] = 1
-    i = i + 1
-y_test = test
+#==========Normalize the training data==========
 
-#padding zeros to first layer
-shape_x = x.shape
-shape_test = x_test.shape
-tem = np.zeros((shape_x[0],shape_x[1]+4, shape_x[2]+4, shape_x[3]))
-tem_test = np.zeros((shape_test[0],shape_test[1]+4, shape_test[2]+4, shape_test[3]))
-tem[:, 2:2+shape_test[1],2:2+shape_test[2], :] = x
-tem_test[:, 2:2+shape_test[1],2:2+shape_test[2], :] = x_test
-x_train = tem
-x_test = tem_test
-#pdb.set_trace()
-
-#Building ConvNetJS
+#==========Building ConvNetJS==========
 from keras.models import Sequential  
 from keras.layers import Dense,Flatten,Dropout, ZeroPadding2D
 from keras.layers.convolutional import Conv2D,MaxPooling2D  
