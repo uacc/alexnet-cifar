@@ -3,14 +3,15 @@ import os
 from conv_weight import LipschitzConstant as lip
 import numpy as np
 def lip_value_generate(PaddingMethod, path):
-    path = os.getcwd()
+    #path = os.getcwd()
     lip_value = [] 
     dtype = [('epochs', int), ('lipschitz', float)]
     #path = path + '/weight_final_version'
     for file in os.listdir(path):
         if file[-4:-1] == 'hsf':
-            tem = lip(file,PaddingMethod)
+            file = path + '/' + file
             print file
+            tem = lip(file,PaddingMethod)
             epoch = file[-8:-5]
             if epoch[0] == '-':
                 epoch = int(epoch[1:len(epoch)])
@@ -21,14 +22,17 @@ def lip_value_generate(PaddingMethod, path):
     # Sort lip constant using epochs
     lipvalue = np.array(lip_value, dtype = dtype)
     lipvalue = np.sort(lipvalue, order = ["epochs"])
-    np.savetxt('padding-lipvalue.txt', lipvalue, delimiter = ",")
+    np.savetxt('tem.txt', lipvalue, delimiter = ",")
  
 
-def lip_margin():
+def lip_margin(NOISE, PaddingMethod):
     # generate lip-value using padding or not
-    lip_value_genrate(True, './weight_final_version')
+    if NOISE == True:
+        lip_value_generate(PaddingMethod, './noise-weight_final_version')
+    else:
+        lip_value_generate(PaddingMethod, './weight_final_version')
   # #Import Lipschitz constant from 1-200 epochs
-    lipsch = 'noise-padding-lipvalue.txt'
+    lipsch = 'tem.txt'
     with open(lipsch) as file:
         li = [[i for i in line.strip().split('\n')] for line in file]
     lipvalue = np.zeros(len(li))
@@ -39,7 +43,11 @@ def lip_margin():
         lipvalue[i] = float(tem[1])
         lipepoch[i] = int(float(tem[0]))
    # Import excess risk to get the range
-    excess = 'excess_risk.txt'
+    if NOISE == True:
+        excess = 'noise_excess_risk.txt'
+    else:
+        excess = 'excess_risk.txt'
+        
     with open(excess) as file:
         exc = [[float(i) for i in line.strip().split('\n')] for line in file]
     excess_risk = np.zeros(len(exc))
@@ -51,6 +59,7 @@ def lip_margin():
     # Resize Lipschitz constant
     #lip_value = lipvalue['lipschitz'] 
     lip_value = lipvalue
+    #pdb.set_trace()
     lip_min = np.min(lip_value)
     lip_max = np.max(lip_value)
     lip_value = (maxrange - minrange) * (lip_value - minrange)
@@ -58,7 +67,10 @@ def lip_margin():
     lip_value = lip_value + minrange
     
     # Import margin number
-    margin = 'margin_history_train_margin.txt'
+    if NOISE == True:
+        margin = 'noise-margin_history_train_margin.txt'
+    else:
+        margin = 'margin_history_train_margin.txt'
     with open(margin) as file:
         mar = [[float(i) for i in line.strip().split('\n')] for line in file]
     margin = np.zeros(len(mar))
