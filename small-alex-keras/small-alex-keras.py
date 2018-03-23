@@ -18,19 +18,19 @@ from keras.callbacks import ModelCheckpoint
 SAVEMARGIN = False 
 SAVEWEIGHT = False 
 SAVEOUTPUT = False
-EXCESSRISK = False 
+EXCESSRISK = True 
 LEARNRATE = 0.01
 DECAYFACTOR = 0.95
 MOMENTUM = 0.9
 step = 0.00005
-EPOCHS = 20 
-PERIOD = 5 
-BATCHSIZE = 16
-TRAIN_NUM = 50000
-FIRST_LAYER_DEPTH = 256 
-SECOND_LAYER_DEPTH = 384 
+EPOCHS = 500 
+PERIOD = 499 
+#BATCHSIZE = 16
+#TRAIN_NUM = 50000
+#FIRST_LAYER_DEPTH = 256 
+#SECOND_LAYER_DEPTH = 384 
 
-def importdata():
+def importdata(TRAIN_NUM):
     from keras.datasets import cifar10
     (x, y), (x_test, y_test) = cifar10.load_data()
     Num_Cat = 10
@@ -102,45 +102,40 @@ def BuildModel(firstlayerdepth, secondlayerdepth):
 
 
 #===========Train Model===================
-x_train, y_train, x_test, y_test = importdata()
+def trainmodel(FIRST_LAYER_DEPTH, SECOND_LAYER_DEPTH, BATCHSIZE, TRAIN_NUM):
+	x_train, y_train, x_test, y_test = importdata(TRAIN_NUM)
 
-model = BuildModel(FIRST_LAYER_DEPTH, SECOND_LAYER_DEPTH)
-print "first layer: " + str(FIRST_LAYER_DEPTH)
-print "second layer: " + str(SECOND_LAYER_DEPTH)
+	model = BuildModel(FIRST_LAYER_DEPTH, SECOND_LAYER_DEPTH)
+	print "first layer: " + str(FIRST_LAYER_DEPTH)
+	print "second layer: " + str(SECOND_LAYER_DEPTH)
+	print "BATCH SIZE: " + str(BATCHSIZE)
+	print "TRAIN_NUM: " + str(TRAIN_NUM)
 
-sgd = optimizers.SGD(lr = LEARNRATE, decay = DECAYFACTOR, momentum = MOMENTUM) 
-model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
-model.summary()
-history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test))
-acc_history = history_callback.history["acc"]
-val_acc_history = history_callback.history["val_acc"]
-decrease_acc = acc_history[0] - acc_history[-1]
-decrease_val = val_acc_history[0] - val_acc_history[-1]
-testrecord[i, 0] = FIRST_LAYER_DEPTH
-testrecord[i, 1] = SECOND_LAYER_DEPTH
-testrecord[i, 2] = decrease_acc 
-testrecord[i, 3] = decrease_val
+	sgd = optimizers.SGD(lr = LEARNRATE, decay = DECAYFACTOR, momentum = MOMENTUM) 
+	model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
+	model.summary()
 
-##Adding check point to export weight from different epoch
-#filepath = "noise-weights-improvement-"+str(learnrate)+"-conn-{epoch:02d}.hsf5"
-#checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = PERIOD)
-##Import callback function to compute margin
-#import my_callbacks
-#marginhistory = my_callbacks.Histories()
+	#Adding check point to export weight from different epoch
+	filepath = "noise_data/noise-weights-improvement-"+"firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH)+"-conn-{epoch:02d}.hsf5"
+	checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = PERIOD)
+	#Import callback function to compute margin
+	#import my_callbacks
+	#marginhistory = my_callbacks.Histories()
 
-        #========== Fit model==========
-#if EXCESSRISK == True:
-#    print "Saving excessrisk for each epoch"
-#    history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
-#    acc_history = history_callback.history["acc"]
-#    val_acc_history = history_callback.history["val_acc"]
-#    numpy_acc_history = np.array(acc_history)
-#    numpy_val_acc_history = np.array(val_acc_history)
-#    accpath = "noise-acc_history_conn_net" + str(learnrate) + ".txt"
-#    valpath = "noise-val_acc_history_conn_net" + str(learnrate) + ".txt"
-#    np.savetxt(accpath,numpy_acc_history, delimiter = ",")
-#    np.savetxt(valpath,numpy_val_acc_history, delimiter = ",")
-#else:
+	       #========== Fit model==========
+	if EXCESSRISK == True:
+	    print "Saving excessrisk for each epoch"
+	    #history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
+	    history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint])
+	    acc_history = history_callback.history["acc"]
+	    val_acc_history = history_callback.history["val_acc"]
+	    numpy_acc_history = np.array(acc_history)
+	    numpy_val_acc_history = np.array(val_acc_history)
+	    accpath = "noise_data/noise-acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
+	    valpath = "noise_data/noise-val_acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
+	    np.savetxt(accpath,numpy_acc_history, delimiter = ",")
+	    np.savetxt(valpath,numpy_val_acc_history, delimiter = ",")
+	#else:
 #    if SAVEMARGIN == True and SAVEWEIGHT == True:
 #        print "Saving margin and weight for each epoch"
 #        history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_train, y_train), callbacks = [checkpoint, marginhistory] )
@@ -164,3 +159,23 @@ testrecord[i, 3] = decrease_val
 #    np.savetxt('noise-final_output.txt', final_output, delimiter = ",")
 #    np.savetxt('noise-y_train.txt', y_train, delimiter = ",")
 
+trainmodel(16,20,32,10000)
+trainmodel(20,20,32,10000)
+trainmodel(20,96,32,10000)
+trainmodel(96,96,32,10000)
+
+
+trainmodel(16,20,64,10000)
+trainmodel(20,20,64,10000)
+trainmodel(20,96,64,10000)
+trainmodel(96,96,64,10000)
+
+trainmodel(16,20,32,25000)
+trainmodel(20,20,32,25000)
+trainmodel(20,96,32,25000)
+trainmodel(96,96,32,25000)
+
+trainmodel(16,20,64,25000)
+trainmodel(20,20,64,25000)
+trainmodel(20,96,64,25000)
+trainmodel(96,96,64,25000)
