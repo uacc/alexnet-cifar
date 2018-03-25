@@ -1,25 +1,27 @@
 #!/usr/bin/env python
 import pdb
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 import math
 import keras
 import numpy as np
 
 #==========Experiment parameter==========
 LEARNRATEFINDING = False
-SAVEMARGIN = True 
-SAVEWEIGHT = True 
-SAVEOUTPUT = True
-EXCESSRISK = False 
+SAVEMARGIN = False 
+SAVEWEIGHT = False 
+SAVEOUTPUT = False
+EXCESSRISK = True 
 #MARGIN = False
 lowerbound = 0.0001
 upperbound = 0.0006
 learnrate = 0.0001
 step = 0.00005
-EPOCHS = 200 
-PERIOD = 5 
+EPOCHS = 500 
+PERIOD = 250 
 BATCHSIZE = 16
+DECAY = 0.95
+MOMENTUM = 0.9
 
 #==========Import Data==========
 from keras.datasets import cifar10
@@ -114,7 +116,8 @@ if LEARNRATEFINDING == True:
         print learnrate
         model.fit(x_train, y_train, epochs = EPOCHS, batch_size = BATCHSIZE)
 else:
-    sgd = optimizers.SGD(lr = learnrate)
+    #sgd = optimizers.SGD(lr = learnrate)
+    sgd = optimizers.SGD(lr = learnrate, decay = DECAY, momentum = MOMENTUM)
     print "Using fixed learning rate " + str(learnrate) 
     model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
     #model.summary()
