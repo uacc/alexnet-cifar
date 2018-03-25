@@ -8,7 +8,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras.models import Sequential  
-from keras.layers import Dense,Flatten,Dropout, ZeroPadding2D
+from keras.layers import Dense,Flatten,Dropout, ZeroPadding2D, BatchNormalization
 from keras.layers.convolutional import Conv2D,MaxPooling2D  
 from keras.utils.np_utils import to_categorical
 from keras import optimizers
@@ -22,7 +22,7 @@ EXCESSRISK = True
 LEARNRATE = 0.01
 DECAYFACTOR = 0.95
 MOMENTUM = 0.9
-step = 0.00005
+#step = 0.00005
 EPOCHS = 500 
 PERIOD = 499 
 #BATCHSIZE = 16
@@ -37,6 +37,8 @@ def importdata(TRAIN_NUM):
     print('Data Imported')
     x = x[0:TRAIN_NUM]
     y = y[0:TRAIN_NUM]
+    #Random label
+    y = np.random.randint(0, 10, len(y))
     #==========input data preprocessing ==========
     # Rescale to [0, 1]
     x_train = x / 255.
@@ -64,12 +66,14 @@ def importdata(TRAIN_NUM):
     temtest = np.zeros((y_test.size, Num_Cat))
     i = 0
     for j in y:
-        temtrain[i, j[0]] = 1
+        #temtrain[i, j[0]] = 1
+        temtrain[i, j] = 1
         i = i + 1
     i = 0
     for j in y_test:
-        temtest[i, j[0]] = 1
+        temtest[i, j] = 1
         i = i + 1
+    #pdb.set_trace()
     y_train = temtrain
     y_test = temtest
 
@@ -80,11 +84,12 @@ def BuildModel(firstlayerdepth, secondlayerdepth):
     model = Sequential()
     model.add(Conv2D(firstlayerdepth,(5, 5),strides=(1,1),input_shape=(28, 28, 3),padding='valid',activation='relu',kernel_initializer='uniform'))  
     model.add(MaxPooling2D(pool_size=(3, 3),strides=(2,2)))
-
+    model.add(BatchNormalization())
     # LRN layer 
 
     model.add(Conv2D(secondlayerdepth,(5, 5),strides=(1,1), padding='valid',activation='relu',kernel_initializer='uniform'))
     model.add(MaxPooling2D(pool_size=(3, 3),strides=(2,2)))
+    model.add(BatchNormalization())
 
     #LRN layer
 
@@ -116,7 +121,7 @@ def trainmodel(FIRST_LAYER_DEPTH, SECOND_LAYER_DEPTH, BATCHSIZE, TRAIN_NUM):
 	model.summary()
 
 	#Adding check point to export weight from different epoch
-	filepath = "noise_data/noise-weights-improvement-"+"firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH)+"-conn-{epoch:02d}.hsf5"
+	filepath = "noise_data/" + str(BATCHSIZE) + str(TRAIN_NUM) + "noise-weights-improvement-"+"firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH)+"-conn-{epoch:02d}.hsf5"
 	checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = PERIOD)
 	#Import callback function to compute margin
 	#import my_callbacks
@@ -131,8 +136,8 @@ def trainmodel(FIRST_LAYER_DEPTH, SECOND_LAYER_DEPTH, BATCHSIZE, TRAIN_NUM):
 	    val_acc_history = history_callback.history["val_acc"]
 	    numpy_acc_history = np.array(acc_history)
 	    numpy_val_acc_history = np.array(val_acc_history)
-	    accpath = "noise_data/noise-acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
-	    valpath = "noise_data/noise-val_acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
+	    accpath = "noise_data/" + str(BATCHSIZE) + str(TRAIN_NUM) + "noise-acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
+	    valpath = "noise_data/" + str(BATCHSIZE) + str(TRAIN_NUM) + "noise-val_acc_history_conn_net" + "firstlayer-"+str(FIRST_LAYER_DEPTH)+"-secondlayer-"+str(SECOND_LAYER_DEPTH) + ".txt"
 	    np.savetxt(accpath,numpy_acc_history, delimiter = ",")
 	    np.savetxt(valpath,numpy_val_acc_history, delimiter = ",")
 	#else:
