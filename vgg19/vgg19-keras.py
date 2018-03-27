@@ -151,8 +151,9 @@ model.compile(loss = 'categorical_crossentropy', optimizer = sgd, metrics = ['ac
 from keras.callbacks import ModelCheckpoint
 filepath = "vgg-noise-weights-improvement-conn-{epoch:02d}.hsf5"
 checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = PERIOD)
-decaySchedule = decay_lr(30, 0.5)
-history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [decaySchedule, checkpoint])
+#decaySchedule = decay_lr(30, 0.5)
+#history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [decaySchedule, checkpoint])
+history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint])
 acc_history = history_callback.history["acc"]
 val_acc_history = history_callback.history["val_acc"]
 numpy_acc_history = np.array(acc_history)
