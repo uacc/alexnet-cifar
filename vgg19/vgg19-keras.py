@@ -48,6 +48,7 @@ class decay_lr(keras.callbacks.Callback):
 
 #==========Import data==========
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+y_train = np.random.randint(0,10,size = len(y_train))
 y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
 y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)
 
