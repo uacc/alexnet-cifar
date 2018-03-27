@@ -133,7 +133,8 @@ else:
         #========== Fit model==========
 if EXCESSRISK == True:
     print "Saving excessrisk for each epoch"
-    history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
+    #history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint, marginhistory] )
+    history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [checkpoint])
     acc_history = history_callback.history["acc"]
     val_acc_history = history_callback.history["val_acc"]
     numpy_acc_history = np.array(acc_history)

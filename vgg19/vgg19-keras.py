@@ -25,7 +25,7 @@ LEARNRATE = 0.05
 WEIGHTDECAY = 0.0005 
 MOMENTUM = 0.9
 EPOCHS = 300 
-PERIOD = 5 
+PERIOD = EPOCHS - 2 
 BATCHSIZE = 128 
 NUM_CLASSES = 10
 BATCH_NORM = False
@@ -147,8 +147,11 @@ model.summary()
 sgd = optimizers.SGD(lr = LEARNRATE,  momentum = MOMENTUM)
 model.compile(loss = 'categorical_crossentropy', optimizer = sgd, metrics = ['accuracy'])
 
+from keras.callbacks import ModelCheckpoint
+filepath = "vgg-noise-weights-improvement-conn-{epoch:02d}.hsf5"
+checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor = 'loss',  verbose = 1, save_best_only = False, mode = 'min', period = PERIOD)
 decaySchedule = decay_lr(30, 0.5)
-history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [decaySchedule])
+history_callback = model.fit(x_train, y_train, epochs = EPOCHS, batch_size =BATCHSIZE, validation_data = (x_test, y_test), callbacks = [decaySchedule, checkpoint])
 acc_history = history_callback.history["acc"]
 val_acc_history = history_callback.history["val_acc"]
 numpy_acc_history = np.array(acc_history)
