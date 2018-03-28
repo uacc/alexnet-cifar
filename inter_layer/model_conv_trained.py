@@ -2,6 +2,7 @@ from __future__ import print_function
 import pdb
 from glob import glob
 import os
+import re
 #os.environ["CUDA_VISIBLE_DEVICES"] = "1, 2"
 import math
 import tensorflow as tf
@@ -27,6 +28,28 @@ NUM_CLASSES = 10
 LEARNRATE = 0.01
 DECAYFACTOR = 0.95
 MOMENTUM = 0.9
+def randomshuffle(x_train, y_train, x_test, y_test):
+    #Reshape x_train and x_test to 1-D array
+    (a, b, c, d) = x_train.shape
+    x_train = x_train.reshape(x_train.shape[0], x_train.shape[1] * x_train.shape[2] * x_train.shape[3])
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1] * x_test.shape[2] * x_test.shape[3])
+    #Combine train and test data
+    train_data = np.concatenate((x_train, y_train), axis = 1)
+    test_data = np.concatenate((x_test, y_test), axis = 1)
+    data_set = np.concatenate((train_data, test_data), axis = 0)
+    #Shuffle train and test data
+    np.random.shuffle(data_set)
+    #Assign value to x_train y_train etc
+    train_data = data_set[0:x_train.shape[0]]
+    test_data = data_set[x_train.shape[0]:]
+    x_train = train_data[:, 0:train_data.shape[1]-1]
+    y_train = train_data[:, -1]
+    x_train = x_train.reshape((b, c, d))
+    x_test = test_data[:, 0:test_data.shape[1]-1]
+    y_test = test_data[:, -1]
+    x_test = x_test.reshape((b, c, d))
+
+    return x_train, y_train, x_test, y_test
 
 def importdata():
     (x, y), (x_test, y_test) = cifar10.load_data()
@@ -90,7 +113,7 @@ def conv_model():
     model.add(Dense(10,activation='softmax', name = 'fc_1'))  
     return model
 
-def small_alex():
+def small_alex(firstlayerdepth, secondlayerdepth):
     model = Sequential()
     model.add(Conv2D(firstlayerdepth,(5, 5),strides=(1,1),input_shape=(28, 28, 3),padding='valid',activation='relu',kernel_initializer='uniform', name = 'conv_1'))  
     model.add(MaxPooling2D(pool_size=(3, 3),strides=(2,2), name = 'pool_1'))
@@ -104,7 +127,9 @@ def small_alex():
     model.add(Flatten()) 
     model.add(Dense(384, activation = 'relu', name = 'fc_1'))
     model.add(Dense(192, activation = 'relu', name = 'fc_2'))
+    model.add(Dense(10, activation = 'softmax', name = 'fc_3'))
     return model
+
 
 def vgg_19():
     model = Sequential()
@@ -192,19 +217,30 @@ def vgg_19():
         model.load_weights(weights_path)
     return model
 
-def get_interlayer(MODEL_NAME = 'conv_model', LAYER_NAME = 'fc_1'):
+def get_interlayer(MODEL_NAME = 'conv_model', LAYER_NAME = 'fc_1', SOURCE = 'conv_weight.hsf5'):
     if MODEL_NAME == 'small_alex':
+        numberlist = re.findall(r'\d+', SOURCE)
+        firstlayer = int(numberlist[1])
+        secondlayer = int(numberlist[2])
         x_train, y_train, x_test, y_test = importdata()
-        model = small_alex()
-        model.load_weights('small_alex_weight.hsf5')
+        (tem, y_train), (tem2, y_test) = cifar10.load_data()
+        x_train, y_train, x_test, y_test = randomshuffle(x_train, y_train, x_test, y_test)
+        y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
+        y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)
+        model = small_alex(firstlayer, secondlayer)
+        #model.load_weights('small_alex_weight.hsf5')
+        model.load_weights(SOURCE)
     elif MODEL_NAME == 'vgg_19':
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+        x_train, y_train, x_test, y_test = randomshuffle(x_train, y_train, x_test, y_test)
         y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
         y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)
         model = vgg_19()
-        model.load_weights('vgg_19_weight.hsf5')
+        #model.load_weights('vgg_19_weight.hsf5')
+        model.load_weights(SOURCE)
     else:
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+        x_train, y_train, x_test, y_test = randomshuffle(x_train, y_train, x_test, y_test)
         y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
         y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)
         shape_x = x_train.shape
@@ -218,7 +254,7 @@ def get_interlayer(MODEL_NAME = 'conv_model', LAYER_NAME = 'fc_1'):
 
         model = conv_model()
         #model.load_weights('conv_weight.hsf5')
-        model.load_weights('noise_conv_weight.hsf5')
+        model.load_weights(SOURCE)
         
     sgd = optimizers.SGD(lr = LEARNRATE, decay = DECAYFACTOR, momentum = MOMENTUM) 
     model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
@@ -235,32 +271,49 @@ def classification_acc(inter_layer, train_inter_layer):
     # Linear SVC classifier
     y_test = y_test.reshape((10000,))
     #Modify inter_layer train_inter_layer shape
-    inter_layer = inter_layer.reshape((inter_layer.shape[0], inter_layer.shape[1] * inter_layer.shape[2] * inter_layer.shape[3]))
-    train_inter_layer = train_inter_layer.reshape((train_inter_layer.shape[0], train_inter_layer.shape[1] * train_inter_layer.shape[2] * train_inter_layer.shape[3]))
+    if len(inter_layer.shape) == 4:
+        inter_layer = inter_layer.reshape((inter_layer.shape[0], inter_layer.shape[1] * inter_layer.shape[2] * inter_layer.shape[3]))
+        train_inter_layer = train_inter_layer.reshape((train_inter_layer.shape[0], train_inter_layer.shape[1] * train_inter_layer.shape[2] * train_inter_layer.shape[3]))
+    
     clf = LinearSVC(random_state=0)
     #===================Train SVC==========
-    print("Training SVC")
+    #print("Training SVC")
     clf.fit(inter_layer, y_test)
     result = clf.predict(inter_layer) - y_test
     acc = np.count_nonzero(result) * 1.
-    test_acc = acc / y_test.shape[0]
+    print("Train acc")
+    train_acc = acc / y_test.shape[0]
+    print(train_acc)
     
     #Linear SVC on training
     y_train = y_train.reshape((50000, ))
-    clf.fit(train_inter_layer, y_train)
+    #clf.fit(train_inter_layer, y_train)
     result = clf.predict(train_inter_layer) - y_train
     acc = np.count_nonzero(result) * 1.
-    train_acc = acc / y_train.shape[0]
+    print("Test acc")
+    test_acc = acc / y_train.shape[0]
+    print(test_acc)
 
     return test_acc, train_acc
     
 
 
-inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_1' )
+print("Train conv_keras from different conv_layer")
+sourcelist = '../weights_conv/noise-weight_final_version/noise-weights-improvement-0.0001-conn-199.hsf5'
+inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_1', sourcelist )
 test_1 = classification_acc(inter_layer, train_inter_layer)
-inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_2' )
+inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_2', sourcelist)
 test_2 = classification_acc(inter_layer, train_inter_layer)
-#inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_3' )
-#test_3 = classification_acc(inter_layer, train_inter_layer)
-pdb.set_trace()
+inter_layer, train_inter_layer = get_interlayer('conv_model', 'pool_3', sourcelist) 
+test_3 = classification_acc(inter_layer, train_inter_layer)
 
+print("Trian small-alex-net from different conv_layer and fc layers")
+sourcelist2 = '../small-alex-keras/noise_data/3225000noise-weights-improvement-firstlayer-96-secondlayer-96-conn-499.hsf5'
+inter_layer, train_inter_layer = get_interlayer('small_alex', 'norm_1', sourcelist2 )
+test_1 = classification_acc(inter_layer, train_inter_layer)
+inter_layer, train_inter_layer = get_interlayer('small_alex', 'norm_2', sourcelist2)
+test_2 = classification_acc(inter_layer, train_inter_layer)
+inter_layer, train_inter_layer = get_interlayer('small_alex', 'fc_1', sourcelist2) 
+test_3 = classification_acc(inter_layer, train_inter_layer)
+inter_layer, train_inter_layer = get_interlayer('small_alex', 'fc_2', sourcelist2) 
+test_4 = classification_acc(inter_layer, train_inter_layer)
